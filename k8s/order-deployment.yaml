@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-ms-deployment
+spec:
+  replicas: 1 # Inicia con una sola instancia
+  selector:
+    matchLabels:
+      app: order-ms
+  template:
+    metadata:
+      labels:
+        app: order-ms
+    spec:
+      containers:
+        - name: order-ms-container
+          image: ghcr.io/mayik81git/order-ms:latest # <-- Tu imagen de Docker (Java 21)
+          ports:
+            - containerPort: 8082
+          env: # <-- Variables de entorno para la DB
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://host.docker.internal:5432/testdb"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "admin"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "admin"
+            - name: SPRING_RABBITMQ_HOST
+              value: "host.docker.internal"
+            - name: SPRING_RABBITMQ_PORT
+              value: "5672"
+            - name: SPRING_RABBITMQ_USERNAME
+              value: "guest" # El usuario por defecto de RabbitMQ
+            - name: SPRING_RABBITMQ_PASSWORD
+              value: "guest" # La contraseña por defecto de RabbitMQ
+          resources:
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8082
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8082
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
