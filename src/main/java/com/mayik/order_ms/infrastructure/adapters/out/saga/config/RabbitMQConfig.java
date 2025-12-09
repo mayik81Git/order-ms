@@ -4,15 +4,43 @@ import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitMQConfig {
+
+    // Inyectar los valores de las variables de entorno usando @Value
+    @Value("${spring.rabbitmq.host:localhost}")
+    private String rabbitMQHost;
+
+    @Value("${spring.rabbitmq.port:5672}")
+    private int rabbitMQPort;
+
+    @Value("${spring.rabbitmq.username:guest}")
+    private String rabbitMQUsername;
+
+    @Value("${spring.rabbitmq.password:guest}")
+    private String rabbitMQPassword;
+
+    /**
+     * Define explícitamente el ConnectionFactory usando las variables inyectadas
+     */
+    @Bean
+    public ConnectionFactory connectionFactory() {
+        CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
+        connectionFactory.setHost(rabbitMQHost);
+        connectionFactory.setPort(rabbitMQPort);
+        connectionFactory.setUsername(rabbitMQUsername);
+        connectionFactory.setPassword(rabbitMQPassword);
+        return connectionFactory;
+    }
 
     /**
      * Configura el convertidor de mensajes JSON.
